@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser, getExpiredSessionCookieConfig } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { buildAppUrl } from "@/lib/url";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const response = NextResponse.redirect(new URL("/login", request.url));
+  const response = NextResponse.redirect(buildAppUrl(request, "/login"));
   const cookie = getExpiredSessionCookieConfig();
   response.cookies.set(cookie.name, cookie.value, cookie.options);
   return response;

@@ -24,7 +24,10 @@ npm install
 cp .env.example .env
 ```
 
-Renseigne ensuite `DATABASE_URL` et `AUTH_SECRET` dans `.env`.
+Renseigne ensuite `DATABASE_URL`, `AUTH_SECRET` et `APP_URL` dans `.env`.
+
+Exemple production:
+- `APP_URL="https://marchedelarefondation.ne"`
 
 ## 2. Base de donnees
 ```bash

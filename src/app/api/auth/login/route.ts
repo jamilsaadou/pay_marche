@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 
 import { authenticateUser, getSessionCookieConfig } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { buildAppUrl } from "@/lib/url";
 
 function redirectWithError(request: Request, message: string) {
-  const url = new URL("/login", request.url);
+  const url = buildAppUrl(request, "/login");
   url.searchParams.set("error", encodeURIComponent(message));
   return NextResponse.redirect(url);
 }
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     description: "Ouverture de session utilisateur.",
   });
 
-  const response = NextResponse.redirect(new URL("/dashboard", request.url));
+  const response = NextResponse.redirect(buildAppUrl(request, "/dashboard"));
   const cookie = getSessionCookieConfig(user.id);
   response.cookies.set(cookie.name, cookie.value, cookie.options);
 
