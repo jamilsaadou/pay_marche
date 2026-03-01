@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Niger Pay Platform (Next.js + Postgres)
 
-## Getting Started
+Plateforme de gestion de paiements avec workflow complet:
+- import Excel des exposants depuis la page Parametres
+- import Excel de la liste des kiosques depuis la page Parametres
+- configuration des montants (defaut, min, max) dans Parametres
+- creation unitaire d'exposant
+- collecte des paiements via API mobile (pas de saisie manuelle web)
+- gestion des utilisateurs avec roles (ADMIN / COLLECTOR)
+- attribution de boutiques uniquement aux exposants regles
+- export Excel des exposants payes
+- journalisation des activites systeme (module Logs)
 
-First, run the development server:
+## Stack
+- Next.js (App Router, TypeScript)
+- PostgreSQL
+- Prisma ORM
+- Auth maison (cookie de session signee)
+- UI glassmorphism inspiree des couleurs du drapeau du Niger
 
+## 1. Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Renseigne ensuite `DATABASE_URL` et `AUTH_SECRET` dans `.env`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Base de donnees
+```bash
+npm run prisma:generate
+npm run db:push
+npm run db:seed
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cela cree:
+- un admin: `admin@plateforme.com`
+- un collecteur demo: `collecteur@plateforme.com`
+- des boutiques de test
 
-## Learn More
+Mots de passe par defaut (surchageables via variables d'env):
+- `Admin1234!`
+- `Collect1234!`
 
-To learn more about Next.js, take a look at the following resources:
+## 3. Lancer la plateforme
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Puis ouvre `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 4. API pour app mobile collecteur
+Documentation complete: `docs/API_COLLECTEUR_PAIEMENT.md`
 
-## Deploy on Vercel
+### Rechercher un exposant
+`GET /api/exhibitors/search?referenceNumber=EXP-2026-001`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Enregistrer un paiement
+`POST /api/payments`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Historique de collecte (mobile)
+`GET /api/payments/history`
+
+### Auth mobile (Bearer)
+`POST /api/auth/mobile/login`
+
+Body JSON:
+```json
+{
+  "referenceNumber": "EXP-2026-001",
+  "amount": 25000,
+  "method": "MOBILE_MONEY",
+  "reference": "TXN-9988",
+  "notes": "Paiement partiel"
+}
+```
+
+Note: ces endpoints exigent une session connectee.
+
+## 5. Modules disponibles
+- `/dashboard`
+- `/collecte`
+- `/paiements`
+- `/exposants` (admin)
+- `/utilisateurs` (admin)
+- `/boutiques` (admin)
+- `/parametres` (admin)
+- `/logs` (admin)
+- `/exposants/import` (admin, redirection vers `/parametres`)
+
+## 6. Import/Export Excel
+- Import exposants: page `/parametres`, fichier `.xlsx`/`.xls`
+- Import kiosques: page `/parametres`, fichier `.xlsx`/`.xls`
+- Export exposants payes: `GET /api/exports/exposants-payes`
+- Colonnes import supportees:
+  `N° Référence`, `Prénom`, `Nom`, `Email`, `Téléphone`, `Âge`, `Sexe`, `Nationalité`, `Adresse`, `Entreprise`, `Registre Commerce`, `Secteur d'activité`, `Localisation`, `Région`
+
+## 7. Si tu as deja une base de donnees existante
+Comme tu as indique avoir deja une base "paiements attendus", adapte le schema `prisma/schema.prisma` (ou fais un `prisma db pull`) pour aligner les colonnes reelles avant mise en production.
